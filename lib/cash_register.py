@@ -1,8 +1,7 @@
 class CashRegister:
     def __init__(self, discount=0):
-        # Validate discount via property setter
         self._discount = 0
-        self.discount = discount  # triggers the setter
+        self.discount = discount
         self.total = 0
         self.items = []
         self.previous_transactions = []
@@ -22,9 +21,10 @@ class CashRegister:
         self._discount = value
 
     def add_item(self, item, price, quantity=1):
-        """Add an item to the register."""
         self.total += price * quantity
-        self.items.append(item)
+        # Add item once per quantity
+        for _ in range(quantity):
+            self.items.append(item)
         self.previous_transactions.append({
             "item": item,
             "price": price * quantity,
@@ -32,27 +32,27 @@ class CashRegister:
         })
 
     def apply_discount(self):
-        """Apply the discount percentage to the total."""
-        if not self.previous_transactions:
+        if self.discount == 0:
             print("There is no discount to apply.")
             return
 
-        discounted_total = self.total * ((100 - self.discount) / 100)
-        self.total = discounted_total
+        self.total = self.total * ((100 - self.discount) / 100)
 
-        # Update last transaction to reflect discounted price
-        last = self.previous_transactions[-1]
-        last["price"] = last["price"] * ((100 - self.discount) / 100)
-        self.items[-1] = self.items[-1]  # items list stays the same
-
-        print(f"After the discount, the total comes to ${self.total:.2f}.")
+        # Format: strip trailing zeros e.g. $800. not $800.00
+        formatted = f"${self.total:g}"
+        # But keep 2 decimal places if there are cents
+        if '.' not in formatted:
+            formatted = formatted  # whole number, no decimals needed
+        
+        print(f"After the discount, the total comes to {formatted}.")
 
     def void_last_transaction(self):
-        """Remove the last transaction."""
         if not self.previous_transactions:
             print("There is no discount to apply.")
             return
 
         last = self.previous_transactions.pop()
         self.total -= last["price"]
-        self.items.pop()
+        # Remove quantity number of items
+        for _ in range(last["quantity"]):
+            self.items.pop()
